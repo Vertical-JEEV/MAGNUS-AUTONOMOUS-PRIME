@@ -5,18 +5,50 @@ import math
 from time import sleep
 
 class ChessboardRecognition:
-    def __init__(self):
+    def __init__(self, CHESSBOARD_DIMENSIONS):
         self.og_img = None
         self.processing_img = None
         self.warped_img = None
         self.tranformation_matrix = None
         self.pixel_coordinates = None
+        self.CHESSBOARD_DIMENSIONS = CHESSBOARD_DIMENSIONS
+        self.cartesian_grid = self.generate_cartesian_grid()
+
+
         
     
 
 
-    def calculate_intrinisc_camera_matrix(self):
-        pass
+    def generate_cartesian_grid(self):
+        cartesian_grid = []
+
+        # extract height and width from CHESSBOARD_DIMENSIONS
+        WIDTH, HEIGHT = self.CHESSBOARD_DIMENSIONS.strip().split("x")
+        # calculate the width and height of each square
+        WIDTH = int(WIDTH)/8
+        HEIGHT = int(HEIGHT)/8
+
+        # generate cartesian grid for intrinsic mapping 
+        for y in range(9):
+            for x in range(9):
+                cartesian_grid.append([x*WIDTH, y*HEIGHT])
+
+        cartesian_grid = np.array(cartesian_grid,dtype='float32')
+        
+        return cartesian_grid
+    
+
+    def calculate_the_intrinsic_matrix(self):
+        # calculate the intrinsic matrix
+        chessboard_coordinates = self.get_chessboard_coordinates()
+        
+        
+
+        
+
+    
+
+
 
 
 
@@ -141,25 +173,25 @@ def test_chessboard_recognition(chessboard_recogniser, frame):
 
 
 def access_web_cam():
-    chessboard_recogniser = ChessboardRecognition()
-    cap = cv2.VideoCapture(1)
-    while(True):
-        # Capture frame-by-frame
-        ret, frame = cap.read()
+    chessboard_recogniser = ChessboardRecognition("32x32")
+    # cap = cv2.VideoCapture(1)
+    # while(True):
+    #     # Capture frame-by-frame
+    #     ret, frame = cap.read()
       
 
-        test_chessboard_recognition(chessboard_recogniser, frame)
+    #     test_chessboard_recognition(chessboard_recogniser, frame)
 
-        cv2.imshow('Original image', chessboard_recogniser.og_img)
-        cv2.imshow('Processing image', chessboard_recogniser.processing_img)
+    #     cv2.imshow('Original image', chessboard_recogniser.og_img)
+    #     cv2.imshow('Processing image', chessboard_recogniser.processing_img)
 
-        #cv2.imshow('Warped image', chessboard_recogniser.warped_img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    #     #cv2.imshow('Warped image', chessboard_recogniser.warped_img)
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
         
     
-    # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows() 
+    # # When everything done, release the capture
+    # cap.release()
+    # cv2.destroyAllWindows() 
 
 access_web_cam()
