@@ -18,66 +18,18 @@ class ChessboardRecognition:
         self.WIDTH =  int(CHESSBOARD_DIMENSIONS.strip().split("x")[0]) # width of chessboard in cm
         self.HEIGHT = int(CHESSBOARD_DIMENSIONS.strip().split("x")[1]) # height of chessboard in cm
 
-        
         self.camera_matrix = None # camera matrix will be used for pixel to 3d conversion
         self.distortion_coeffcients = None # will be used to undistort the cameras
         self.translation_vector = None # gives a relative postiion of the camera to the 3d coordinate system
-        self.rotation_vector = None # gives a rotation relative to 3d coordinates
+        self.rotation_vector = None # gives a rotation relative to 3d coordinates system
        
-        self.chessboard_3d_coordinates = None
+        self.chessboard_3d_coordinates = None # stores the 3d coordinates once its been converted 
 
     
-    def get_imgs_to_save(self):
-        # get the frames fromt the camera
-        cap = cv2.VideoCapture(1)
-        count = 0
-        # get the frames from the camera
-        while(True):
-            
-            # if the user presses s then save the image
-            ret, frame = cap.read()
-            cv2.imshow('frame', frame)
-            # if the user presses s then save the image
-            if cv2.waitKey(1) & 0xFF == ord('s'):
-                count += 1
-                cv2.imwrite(rf"C:\Users\Sanjeev\Documents\project_devlopment\MAGNUS-AUTONOMOUS-PRIME\Image_processing_module\chessboard_images_for_calibration\img{count}.jpg", frame)
-
-            # if the user presses q then quit the program
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-
-    def find_chessboard_pixel_corners_for_calibration(self):
-        # store the pixel_corners for the calibration
-        chessboard_pixel_corners_for_calibration = []
-        FILE_PATH = r"C:\Users\Sanjeev\Documents\project_devlopment\MAGNUS-AUTONOMOUS-PRIME\Image_processing_module\chessboard_images_for_calibration"
-        # loop through all the images in the file path
-        for file in os.listdir(FILE_PATH):
-            #print(file)
-            # get the pixel coordinates of each corner of each square on the chessboard of each image
-            file_path = rf"{FILE_PATH}\{file}"
-            print(file_path)
-            img = cv2.imread(file_path)
-
-            cv2.imshow("file image", img)
-        
-            test_chessboard_recognition(self, cv2.imread(os.path.join(FILE_PATH, file)))
-            cv2.imshow("detected corners", self.og_img)
-            cv2.imshow("processing img", self.processing_img)
-
-            chessboard_pixel_corners_for_calibration.append(self.pixel_coordinates)
-
-
-        # convert the list to a numpy array
-        chessboard_pixel_corners_for_calibration = np.array(chessboard_pixel_corners_for_calibration)
-        return chessboard_pixel_corners_for_calibration
-    
-
 
     def get_3d_chessboard_corners_for_calibration(self):
         # store the 3d corners for the calibration
         chessboard_3d_corners_for_calibration = []
-        # loop through all the images in the file path
         # 8x8 chessboard so 81 corners
         for i in range(9):
             for j in range(9):
@@ -87,6 +39,49 @@ class ChessboardRecognition:
         return chessboard_3d_corners_for_calibration
     
 
+
+    def get_imgs_and_their_corners_for_calibration(self):
+        # get the frames fromt the camera
+        cap = cv2.VideoCapture(0)
+        pixel_coordinates_for_calibration = []
+        chessboard_3d_corners_for_calibration = []
+        
+        # get the frames from the camera
+        while(True):
+            
+            ret, frame = cap.read()
+
+            
+            test_chessboard_recognition(self, frame)
+            cv2.imshow('detected corners', self.og_img) # shows what corners are detected
+            cv2.imshow('processing image', self.processing_img) # the user can see if the chessboard is the largest contour
+           
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            # if the user presses s then run corner detecion on the image
+            elif cv2.waitKey(1) & 0xFF == ord('s'):
+                
+                # get the pixel coordinates of each corner of each square on the chessboard and add to our list
+                if self.pixel_coordinates != None:
+
+                    
+                    pixel_coordinates_for_calibration.append(self.pixel_coordinates)
+                    chessboard_3d_corners_for_calibration.append(self.get_3d_chessboard_corners_for_calibration())
+                    print("saved img coords for calibration")
+
+        
+   
+        # convert the list to a numpy array
+        pixel_coordinates_for_calibration = np.array(pixel_coordinates_for_calibration)
+        chessboard_3d_corners_for_calibration = np.array(chessboard_3d_corners_for_calibration)
+       
+        # When everything done, release the capture
+        cap.release()
+        cv2.destroyAllWindows()
+        return pixel_coordinates_for_calibration,  chessboard_3d_corners_for_calibration
+                
+
+        
 
     def calibrate_camera(self):
         chessboard_3d_corners_for_calibration = self.get_3d_chessboard_corners_for_calibration()
@@ -171,25 +166,27 @@ class ChessboardRecognition:
         img_copy = self.warped_img.copy()
         # convert warped image to grayscale
         self.warped_img = cv2.cvtColor(self.warped_img, cv2.COLOR_BGR2GRAY)
-        # apply a very strong gaussian blur to prevent numbers and letters of the chessboard from being detected as corners
+        # apply a strong gaussian blur to prevent numbers and letters of the chessboard from being detected as corners
         self.warped_img = cv2.GaussianBlur(self.warped_img, (9,9), 0)
         # using the shi- tomasi algorithm to find each corner of each square on the chessboard
         try:
-            corners = cv2.goodFeaturesToTrack(self.warped_img, 85, 0.01, 40)
+
+            corners = cv2.goodFeaturesToTrack(self.warped_img, 85, 0.02, 40)
             # improve accuracy of corners, using subpixel accuracy
             criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 1000, 0.0001)
             corners = cv2.cornerSubPix(self.warped_img, corners, (11,11), (-1,-1), criteria)
-            # flip the corners back to the original orientation
+            # this guarantees that we have 81 corners, if not then we cant use the image
+            if len(corners) != 81:
+                return False
+            
+            
+        
+
 
 
             # draw the corners on the warped image
             # for corner in corners:
                 # cv2.circle(img_copy, (int(corner[0][0]), int(corner[0][1])), 5, (0,0,255), -1)
-
-
-            # corners = cv2.flip(corners, 1)
-            # # # rotate the corners back to the original orientation
-            # corners = cv2.rotate(corners, cv2.ROTATE_180) 
 
             # convert warped plane corners to original plane corners using the inverse transformation matrix we got from the reverse perspective transform
             self.pixel_coordinates = np.dot(self.inverse_tranformation_matrix, np.array([corners[:,0,0], corners[:,0,1], np.ones(corners.shape[0])]))
@@ -201,12 +198,47 @@ class ChessboardRecognition:
             # #draw the corners on the original image
             for corner in self.pixel_coordinates:
                 cv2.circle(self.og_img, (int(corner[0]), int(corner[1])), 5, (0,0,255), -1)
+                # add text to the image
+                    # cv2.putText(self.og_img, f"({int(corner[0])}, {int(corner[1])})", (int(corner[0]), int(corner[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
 
             #cv2.imshow("detected corners",self.og_img )
         except cv2.error:
             print("No corners found")
 
     
+
+
+
+    # def pixel_coordinates_using_chessboard_corners(self):
+    #     img_copy = self.warped_img.copy()
+    #     # convert warped image to grayscale
+    #     self.warped_img = cv2.cvtColor(self.warped_img, cv2.COLOR_BGR2GRAY)
+    #     # apply a very strong gaussian blur to prevent numbers and letters of the chessboard from being detected as corners
+    #     self.warped_img = cv2.GaussianBlur(self.warped_img, (9,9), 0)
+
+    #     ret, corners = cv2.findChessboardCorners(self.warped_img, (6,6), None)
+    #     if ret:
+    #         # improve accuracy of corners, using subpixel accuracy
+    #         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 1000, 0.0001)
+    #         corners = cv2.cornerSubPix(self.warped_img, corners, (11,11), (-1,-1), criteria)
+
+    #         # draw the corners on the warped image
+    #         for corner in corners:
+    #             cv2.circle(img_copy, (int(corner[0][0]), int(corner[0][1])), 5, (0,0,255), -1)
+
+
+
+    #         self.pixel_coordinates = np.dot(self.inverse_tranformation_matrix, np.array([corners[:,0,0], corners[:,0,1], np.ones(corners.shape[0])]))
+            
+
+    #         self.pixel_coordinates = self.pixel_coordinates[:2,:] / self.pixel_coordinates[2,:]
+
+    #         self.pixel_coordinates = np.transpose(self.pixel_coordinates)
+    #         # #draw the corners on the original image
+    #         for corner in self.pixel_coordinates:
+    #             cv2.circle(self.og_img, (int(corner[0]), int(corner[1])), 5, (0,0,255), -1)
+        
+
     def convert_pixel_coordinates_to_3d(self):
         inverse_camera_matrix = np.linalg.inv(self.camera_matrix)
         
@@ -224,32 +256,17 @@ class ChessboardRecognition:
         self.inverse_tranformation_matrix = None
         self.pixel_coordinates = None
         
-
-
-  
-
-        
+      
         #print("This is not working")
             
-
-
-        
-       
 
 
     
 def test_camera_calibration():
     chessboard_recogniser = ChessboardRecognition("32x32")
-    #chessboard_recogniser.get_imgs_to_save()
+    pixel_corners_for_calibration = chessboard_recogniser.get_imgs_and_their_corners_for_calibration()
     
-    chessboard_recogniser.find_chessboard_pixel_corners_for_calibration()
     
-    pass
-
-
-
-
-
 
 
 
@@ -267,7 +284,16 @@ def test_chessboard_recognition(chessboard_recogniser, frame):
     # crop and transform the image to a top down view
     chessboard_recogniser.crop_and_get_top_down_view_of_chessboard(corners)
     # get the pixel coordinates of each corner of each square on the chessboard
-    chessboard_recogniser.get_pixel_coordinates_using_shi_tomasi_on_warped_img()
+    if chessboard_recogniser.get_pixel_coordinates_using_shi_tomasi_on_warped_img() == False: #  if you cant 81 corners of the img 
+        pass
+    
+
+
+    # show the images
+    cv2.imshow('Original image', chessboard_recogniser.og_img)
+    cv2.imshow('Processing image', chessboard_recogniser.processing_img)
+    cv2.imshow('Warped image', chessboard_recogniser.warped_img)
+    #chessboard_recogniser.pixel_coordinates_using_chessboard_corners()
    
       
 
@@ -279,14 +305,12 @@ def test_chessboard_recognition(chessboard_recogniser, frame):
 def access_web_cam():
     chessboard_recogniser = ChessboardRecognition("32x32")
     #test_camera_calibration(chessboard_recogniser)
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     while(True):
         # Capture frame-by-frame
         ret, frame = cap.read()
         test_chessboard_recognition(chessboard_recogniser, frame)
-        cv2.imshow('Original image', chessboard_recogniser.og_img)
-        cv2.imshow('Processing image', chessboard_recogniser.processing_img)
-        cv2.imshow('Warped image', chessboard_recogniser.warped_img)
+    
         #chessboard_recogniser.class_reset()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -295,6 +319,6 @@ def access_web_cam():
     cv2.destroyAllWindows() 
 
 
-#access_web_cam()
+access_web_cam()
 
-test_camera_calibration()
+#test_camera_calibration()

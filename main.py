@@ -3,6 +3,38 @@ from Image_processing_module.chessboard_recognition import ChessboardRecognition
 import cv2
 
 
+class StartGame:
+    def __init__(self, chessboard_dimensions, elo, colour):
+        self.chessboard_dimensions = chessboard_dimensions
+        self.ELO = elo
+        self.chessboard_recogniser = ChessboardRecognition()
+        self.arduino_comunicator = ArduinoComunicator()
+        self.chesspiece_recogniser = ChesspieceRecognition()
+        self.PLAYER_COLOR = colour
+        self.ROBOT_COLOR = "white" if self.PLAYER_COLOR == "black" else "black"
+        self.turn = True if self.PLAYER_COLOR == "white" else False
+
+       
+        
+    
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def test_chessboard_recognition(chessboard_recogniser, frame):
@@ -31,11 +63,11 @@ def access_web_cam():
 
 def main():
 
-    #arduino_comunicator = ArduinoComunicator()
+    arduino_comunicator = ArduinoComunicator()
     
-    cam_joint_angle_string = "130,110,80,30,90,73"
-    #arduino_comunicator.pass_joint_angles_to_arm(cam_joint_angle_string)
-    access_web_cam()
+    cam_joint_angle_string = "130,45,90,90,90,10"
+    arduino_comunicator.pass_joint_angles_to_arm(cam_joint_angle_string)
+    #access_web_cam()
 
     
     # joint_angle_string = "120,45,45,130,60,73"
