@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
-
-from sklearn.cluster import KMeans
+import pickle as pkl
 
 
 class ChessboardRecognition:
@@ -67,6 +66,7 @@ class ChessboardRecognition:
                     pixel_coordinates_for_calibration.append(self.pixel_coordinates)
                     chessboard_3d_corners_for_calibration.append(self.get_3d_chessboard_corners_for_calibration())
                     NUM_IMAGES_USED += 1
+                    print(f"Number of images used for calibration is {NUM_IMAGES_USED}")
                     print("saved the img for calibration\n")
      
         # when we have saved the points for 20 images we will then close the cap and destroy all windows      
@@ -84,9 +84,9 @@ class ChessboardRecognition:
     def calibrate_camera(self):
         pixel_coordinates_for_calibration, chessboard_3d_corners_for_calibration = self.get_imgs_and_their_corners_for_calibration()
         # reshape pixel_coordinates_for_calibration to 10,49,1,2
-        pixel_coordinates_for_calibration = np.reshape(pixel_coordinates_for_calibration,(20,81,1,2))
+        pixel_coordinates_for_calibration = np.reshape(pixel_coordinates_for_calibration,((len(pixel_coordinates_for_calibration)),81,1,2))
         # reshape chessboard_3d_corners_for_calibration to 10,49,1,3
-        chessboard_3d_corners_for_calibration = np.reshape(chessboard_3d_corners_for_calibration,(20,81,1,3))
+        chessboard_3d_corners_for_calibration = np.reshape(chessboard_3d_corners_for_calibration,(len(chessboard_3d_corners_for_calibration),81,1,3))
         # calibrate the camera using object and image points
         ret, intrinsic_matrix, distortion_coefficients, rotation_vector, translation_vector = cv2.calibrateCamera(chessboard_3d_corners_for_calibration, pixel_coordinates_for_calibration, (self.original_img.shape[1], self.original_img.shape[0]), None, None)
 
@@ -194,7 +194,7 @@ class ChessboardRecognition:
         self.inverse_tranformation_matrix = cv2.getPerspectiveTransform(destination_points, corners_for_perspective_transform)
         
         # apply the transformation matrix to the cropped image
-        self.warped_img = cv2.warpPerspective(self.drawing_original_img, self.transformation_matrix, (WIDTH, HEIGHT))
+        self.warped_img = cv2.warpPerspective(self.original_img, self.transformation_matrix, (WIDTH, HEIGHT))
         
 
         # show the top down view of the chessboard
@@ -213,7 +213,9 @@ class ChessboardRecognition:
         try:
             corners = cv2.goodFeaturesToTrack(self.warped_img, 81, 0.02, 40)
             # improve accuracy of corners, using subpixel accuracy
-            if len(corners) > 81:
+            if corners is None:
+                print("no corners found")
+            elif len(corners) > 81:
                 print("Too many corners found")
             elif len(corners) < 81:
                 print("Not enough corners found")
@@ -232,12 +234,12 @@ class ChessboardRecognition:
                     sorted_corners.append(sorted(corners[i:i+9], key=lambda x: x[0]))
 
                 corners = np.reshape(sorted_corners, (81, 1, 2))
-                for i,corner in enumerate(corners):
-                    cv2.circle(img_copy, (int(corner[0][0]), int(corner[0][1])), 2, (0, 0, 255), -1)
-                    cv2.putText(img_copy, str(i+1), (int(corner[0][0]), int(corner[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                # for i,corner in enumerate(corners):
+                #     cv2.circle(img_copy, (int(corner[0][0]), int(corner[0][1])), 2, (0, 0, 255), -1)
+                #     cv2.putText(img_copy, str(i+1), (int(corner[0][0]), int(corner[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-                # show the warped image with the corners
-                cv2.imshow('deteted corners on warped image', img_copy)
+                # # show the warped image with the corners
+                # cv2.imshow('deteted corners on warped image', img_copy)
 
                 # convert warped plane corners to original plane corners using the inverse transformation matrix we got from the reverse perspective transform
                 self.pixel_coordinates = np.dot(self.inverse_tranformation_matrix, np.array([corners[:, 0, 0], corners[:, 0, 1], np.ones(corners.shape[0])]))
@@ -247,18 +249,56 @@ class ChessboardRecognition:
                 self.pixel_coordinates = np.reshape(self.pixel_coordinates, (81, 1, 2))
 
                 #draw the corners on the original image and add text of the current index to the
-                for i in range(len(corners)):
-                    cv2.circle(self.drawing_original_img, (int(corners[i][0]), int(corners[i][1])), 2, (0, 0, 255), -1)
-                    #add the order of the corners to the image
-                    cv2.putText(self.drawing_original_img, str(i), (int(corners[i][0]), int(corners[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                # for i in range(len(corners)):
+                #     cv2.circle(self.drawing_original_img, (int(corners[i][0]), int(corners[i][1])), 2, (0, 0, 255), -1)
+                #     #add the order of the corners to the image
+                #     cv2.putText(self.drawing_original_img, str(i), (int(corners[i][0]), int(corners[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                # draw chessboard corners with drawchessboarcorners
+                cv2.drawChessboardCorners(self.drawing_original_img, (9, 9), corners, True)
+                # show the original image with the corners
+                
         
         except ValueError:
             print("No corners found")
 
 
     def convert_pixel_coordinates_to_3d(self):
-        inverse_camera_matrix = np.linalg.inv(self.camera_matrix)
-        self.chessboard_3d_coordinates = np.dot(inverse_camera_matrix, self.pixel_coordinates)
+        
+        self.pixel_coordinates = np.reshape(self.pixel_coordinates, (81,2))
+        undistored_corners = cv2.undistortPoints(self.pixel_coordinates, self.INTRINSIC_CAMERA_MATRIX, self.DISTORTION_COEFFICIENT, P = self.INTRINSIC_CAMERA_MATRIX)
+
+        self.chessboard_3d_coordinates = np.zeros((81, 3))
+
+    # For each 2D corner, create a 3D point.
+        for i in range(81):
+            # The x and y coordinates are the same as the 2D point.
+            self.chessboard_3d_coordinates[i, :2] = undistored_corners[i, 0, :] * self.WIDTH
+            # The z coordinate is 0.
+            self.chessboard_3d_coordinates[i, 2] = 0
+
+        # Rotate the 3D points using the extrinsic matrix.
+        self.chessboard_3d_coordinates = np.dot(self.chessboard_3d_coordinates, self.EXTRINSIC_CAMERA_MATRIX[:, :3].T) + self.EXTRINSIC_CAMERA_MATRIX[:, 3]
+
+        
+        
+
+        # draw corners onto original image and each corner label the corresponding 3d coordinate
+        for i in range(len(self.pixel_coordinates)):
+        # Draw a circle at the corner's location.
+            cv2.circle(self.original_img, (int(self.pixel_coordinates[i][0]), int(self.pixel_coordinates[i][1])), 2, (0, 0, 255), -1)
+            
+            # Get the corresponding 3D coordinate.
+            coord_3d = self.chessboard_3d_coordinates[i]
+            
+            # Convert the 3D coordinate to a string.
+            coord_3d_str = f'({coord_3d[0]:.2f}, {coord_3d[1]:.2f}, {coord_3d[2]:.2f})'
+            
+            # Draw the string next to the corner.
+            cv2.putText(self.original_img, coord_3d_str, (int(self.pixel_coordinates[i][0]), int(self.pixel_coordinates[i][1])-10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 2)
+          
+
+
 
 
 
@@ -283,9 +323,12 @@ class ChessboardRecognition:
             #get the pixel coordinates of each corner of each square on the chessboard, passing in false so that we draw the corners
             self.get_pixel_coordinates_using_shi_tomasi_on_warped_img()
             cv2.imshow('Warped image', self.warped_img)
+            self.convert_pixel_coordinates_to_3d()
+
 
         # show the images
-        cv2.imshow('Original image', self.drawing_original_img)
+        cv2.imshow('original image', self.original_img)
+        cv2.imshow('drawing original image', self.drawing_original_img)
         cv2.imshow('Processing image', self.processing_img)
     
 
@@ -295,11 +338,36 @@ def access_web_cam():
     # object_points = chessboard_recogniser.get_3d_chessboard_corners_for_calibration()
     # print(object_points)
 
-    intrinsic_matrix, extrinsic_matrix, distortion_coefficients = chessboard_recogniser.calibrate_camera()
+    #intrinsic_matrix, extrinsic_matrix, distortion_coefficients = chessboard_recogniser.calibrate_camera()
     
+
+    # save the camera matrix and distortion coefficients and extrinsic matrix with pickle
+    # with open("camera_matrix.pkl", "wb") as f:
+    #     pkl.dump(intrinsic_matrix, f)
+    # with open("distortion_coefficients.pkl", "wb") as f:
+    #     pkl.dump(distortion_coefficients, f)
+    # with open("extrinsic_matrix.pkl", "wb") as f:
+    #     pkl.dump(extrinsic_matrix, f)
+
+    
+
+    # load pickle files
+    with open("camera_matrix.pkl", "rb") as f:
+        intrinsic_matrix = pkl.load(f)
+    with open("distortion_coefficients.pkl", "rb") as f:
+        distortion_coefficients = pkl.load(f)
+    with open("extrinsic_matrix.pkl", "rb") as f:
+        extrinsic_matrix = pkl.load(f)
+
+    print(f"intrinsic_matrix is {intrinsic_matrix}")
+    print(f"distortion_coefficients is {distortion_coefficients}")
+    print(f"extrinsic_matrix is {extrinsic_matrix}")
+
+
     chessboard_recogniser.INTRINSIC_CAMERA_MATRIX = intrinsic_matrix
     chessboard_recogniser.EXTRINSIC_CAMERA_MATRIX = extrinsic_matrix
     chessboard_recogniser.DISTORTION_COEFFICIENT = distortion_coefficients
+
 
 
 

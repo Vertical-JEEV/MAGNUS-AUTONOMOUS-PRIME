@@ -1,4 +1,3 @@
-# import kivy
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -7,8 +6,14 @@ from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.utils import get_color_from_hex
+from kivy.uix.slider import Slider
+from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.gridlayout import GridLayout
+from kivy.graphics import Color, Rectangle
+from kivy.graphics import Line
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.relativelayout import RelativeLayout
 import re
-
 
 
 
@@ -49,18 +54,225 @@ class MainMenu(Screen):
 
 
     def start_game(self, instance):
-        print('Starting new game')
+        # Switch to the start new game menu
+        self.manager.current = 'start_new_game_menu'
 
     def load_game(self, instance):
-        print('Loading existing game')
+        # Switch to the load existing game menu
+        self.manager.current = 'load_existing_game_menu'
 
     def calibrate_game(self, instance):
         # Switch to the calibration menu
         self.manager.current = 'calibration_menu'
 
 
-class StartGameMenu(Screen):
-    pass
+class StartNewGameMenu(Screen):
+
+    def __init__(self, **kwargs):
+        super(StartNewGameMenu, self).__init__(**kwargs)
+        self.layout = BoxLayout(orientation='vertical')
+        self.add_widget(self.layout)
+        # Add title called 'Start new game'
+        self.layout.add_widget(Label(text='Start new game', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF')))
+        # Create a horizontal BoxLayout
+        slider_layout = BoxLayout(orientation='horizontal')
+        # Add the slider widget
+        self.elo_slider = Slider(min=0, max=3000, value=1500, step=1)
+        self.elo_slider.bind(value=self.show_selected_elo_level)
+        # Add a label to display the current ELO level
+        self.elo_label = Label(text=f'Selected elo level: {int(self.elo_slider.value)}')
+        slider_layout.add_widget(self.elo_label)
+        # Add the slider to the layout
+        slider_layout.add_widget(self.elo_slider)
+        # Add the slider layout to the main layout
+        self.layout.add_widget(slider_layout)
+        # add a toggle button between the slider and the buttons with gaps on either side
+        self.toggle = ToggleButton(text='White', size_hint_min=(150, 50), color=get_color_from_hex('#FFFFFF'))
+        self.toggle.bind(state=self.set_toggle_state)
+        self.layout.add_widget(self.toggle)
+        self.add_buttons_layout()
+
+
+    def show_selected_elo_level(self, instance, value):
+        # Update the label text when the slider value is changed
+        self.elo_label.text = f'Selected elo level: {int(value)}'
+
+    def set_toggle_state(self,instance, state ):
+        # Set the text of the toggle button to either white or black
+        if state == 'down':
+            instance.text = 'Black'
+        else:
+            instance.text = 'White'
+
+    
+    def add_buttons_layout(self):
+        # create a horizontal BoxLayout for the start and load buttons
+        button_layout = BoxLayout(orientation='horizontal')
+
+        # Add buttons
+        start_button = Button(text='Start', size_hint_min=(150, 50), color=get_color_from_hex('#FFFFFF'))
+        start_button.bind(on_press=self.start_game)
+        button_layout.add_widget(start_button)
+
+
+        exit_button = Button(text='Exit', size_hint_min=(150, 50), color=get_color_from_hex('#FFFFFF'))
+        exit_button.bind(on_press=self.exit_game)
+        button_layout.add_widget(exit_button)
+
+
+        # Add the horizontal BoxLayout to the main layout
+        self.layout.add_widget(button_layout)
+
+    def start_game(self, instance):
+        # show slider val and show if white or black
+        print(f"elo level is {self.elo_slider.value}")
+        if self.toggle.state == 'down':
+            print("Black")
+        else:
+            print("White")
+
+        # Switch to the game window
+        self.manager.current = 'game_window'
+
+    def exit_game(self, instance):
+        # Switch to the main menu
+        self.manager.current = 'main_menu'
+
+
+
+class BorderedLabel(Label):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.border = Line(width=1)
+        self.canvas.after.add(Color(1, 1, 1, 1))
+        self.canvas.after.add(self.border)
+        self.bind(pos=self.update_border, size=self.update_border)
+
+    def update_border(self, *args):
+        self.border.rectangle = (*self.pos, *self.size)
+
+class TableRow(BoxLayout):
+    def __init__(self, row_data, menu, selectable=True, **kwargs):
+        super(TableRow, self).__init__(**kwargs)
+        self.menu = menu
+        self.selectable = selectable
+        self.row_data = row_data
+        self.orientation = 'horizontal'
+        self.background = Color(1, 1, 1, 0)  # Transparent by default
+        self.rect = Rectangle(pos=self.pos, size=self.size)
+        self.canvas.before.add(self.background)
+        self.canvas.before.add(self.rect)
+
+        for item in row_data:
+            label = BorderedLabel(text=str(item), halign='left')
+            scroll_view = ScrollView()
+            scroll_view.add_widget(label)
+            self.add_widget(scroll_view)
+
+        self.bind(on_touch_down=self.select_row, pos=self.update_rect, size=self.update_rect)
+
+
+
+    def update_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
+
+    def select_row(self, instance, touch):
+        if self.collide_point(*touch.pos) and self.selectable:
+            if self.menu.selected_row:
+                self.menu.selected_row.background.a = 0  # Unhighlight the previously selected row
+            self.background.a = 0.5  # Highlight the selected row
+            self.menu.selected_row = self
+            self.menu.update_selected_row_label()  # Update the selected row label
+            
+
+class LoadExistingGameMenu(Screen):
+    
+    def __init__(self, **kwargs):
+        super(LoadExistingGameMenu, self).__init__(**kwargs)
+        self.layout = BoxLayout(orientation='vertical')
+        self.add_widget(self.layout)
+        
+
+        # Add title
+        self.layout.add_widget(Label(text='Load existing game', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF')))
+        self.selected_row_label = Label(text = '')
+        self.selected_row = None
+        self.layout.add_widget(self.selected_row_label)
+        
+        # Create a GridLayout for the table with spacing between the cells
+        self.table_layout = GridLayout(cols=1)
+        self.layout.add_widget(self.table_layout)
+
+        # Add the field names to the table
+        field_names = ['Game Name', 'ELO', 'User Score', 'Robot Score', 'User Colour', 'Date']
+        self.table_layout.add_widget(TableRow(field_names, self, selectable=False))
+        # Fetch the data from the database and add it to the table
+        self.populate_table()
+
+        # Create a horizontal BoxLayout for the start and load buttons
+        self.add_buttons_layout()
+
+    def select_row(self, row):
+        if self.selected_row:
+            self.selected_row.background_color = (1, 1, 1, 1)
+        row.background_color = (1, 0, 0, 1)
+        self.selected_row = row
+
+
+    def populate_table(self):
+        # Fetch the data from the database
+      
+        data = [['Game 1', 1500, 0, 1, 'White', '01/01/2021'],
+                ['Game 2', 1500, 0.5, 0.5, 'White', '01/01/2021'],
+                ['Game 3', 1500, 1, 0, 'White', '01/01/2021'],
+                ['Game 4', 1500, 0, 1, 'Black', '01/01/2021'],
+                ['Game 5', 1500, 0.5, 0.5, 'Black', '01/01/2021'],
+                ['Game 6', 1500, 1, 0, 'Black', '01/01/2021']]
+
+        for row in data:
+            self.table_layout.add_widget(TableRow(row,self))
+
+    def add_buttons_layout(self):
+        # create a horizontal BoxLayout for the start and load buttons
+        button_layout = BoxLayout(orientation='horizontal')
+
+        # Add buttons
+        load_button = Button(text='Load', size_hint_min=(150, 50), color=get_color_from_hex('#FFFFFF'))
+        load_button.bind(on_press=self.load_game)
+        button_layout.add_widget(load_button)
+
+        exit_button = Button(text='Exit', size_hint_min=(150, 50), color=get_color_from_hex('#FFFFFF'))
+        exit_button.bind(on_press=self.exit_game)
+        button_layout.add_widget(exit_button)
+
+        # Add the horizontal BoxLayout to the main layout
+        self.layout.add_widget(button_layout)
+
+
+    def update_selected_row_label(self):
+        if self.selected_row:
+            self.selected_row_label.text = f'You selected {self.selected_row.row_data[0]}'
+
+        else:
+            self.selected_row_label.text = 'No row selected'
+
+       
+
+    
+    def load_game(self, instance):
+        
+        print("game has started")
+        print(f"selected row is {self.selected_row.row_data}")
+        self.manager.current = 'game_window'
+
+    def exit_game(self, instance):
+        self.manager.current = "main_menu"
+
+
+
+
+
 
 
 
@@ -116,20 +328,21 @@ class CalibrationMenu(Screen):
 
     def check_value(self, value):
         try:
-            return float(value)
+            if float(value) >0:
+                return float(value)
         except ValueError:
             return None
         
 
     def save_game(self, instance):
         PATTERN = r'^\d+x\d+$'
-        chessboard_dimensions = self.chessboard_dimensions.text
-        if not re.match(PATTERN, chessboard_dimensions.strip()):
+        chessboard_dimensions = self.chessboard_dimensions.text.strip().lower()
+        if not re.match(PATTERN, chessboard_dimensions):
             print('Invalid input')
             width = None
             height = None
         else:
-            width, height = self.chessboard_dimensions.text.split('x').strip()
+            width, height = chessboard_dimensions.split('x')
             width = self.check_value(width)
             height = self.check_value(height)
 
@@ -174,8 +387,95 @@ class CalibrationMenu(Screen):
 
 
     def show_error_popup(self,error_msg):
-        popup = Popup(title = "Error", content = Label(text = error_msg), size_hint = (None,None), size = (400,200))
+        # Create a custom layout for the content
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text=error_msg))
+        button = Button(text='Close')
+        content.add_widget(button)
+        # Create the pop-up
+        popup = Popup(title='Error', content=content,size_hint=(None, None), size=(400, 200), auto_dismiss=False)
+        # Bind the on_press event of the button to the dismiss method of the pop-up
+        button.bind(on_press=popup.dismiss)
+        # Open the pop-up
         popup.open()
+
+
+
+
+class GameWindow(Screen):
+    def __init__(self, **kwargs):
+        super(GameWindow, self).__init__(**kwargs)
+        self.layout = RelativeLayout()
+        self.layout.add_widget(Label(text='Game Window', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF')))
+        self.fen_string = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR'
+        self.add_widget(self.layout)
+        self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
+        self.draw_chessboard(self, None)
+        
+
+
+    def draw_chessboard(self, instance, value):
+       # capital letters are White, lower case is black
+        piece_img_dict = { 
+        'P': r'interface_module\images\black_pieces\bP.png',
+        'N': r'interface_module\images\black_pieces\bN.png',
+        'B': r'interface_module\images\black_pieces\bB.png',
+        'R': r'interface_module\images\black_pieces\bR.png',
+        'Q': r'interface_module\images\black_pieces\bQ.png',
+        'K': r'interface_module\images\black_pieces\bK.png',
+        'p': r'interface_module\images\white_pieces\wP.png',
+        'n': r'interface_module\images\white_pieces\wN.png',
+        'b': r'interface_module\images\white_pieces\wB.png',
+        'r': r'interface_module\images\white_pieces\wR.png',
+        'q': r'interface_module\images\white_pieces\wQ.png',
+        'k': r'interface_module\images\white_pieces\wK.png',
+        }
+        self.layout.canvas.clear()
+        padding = 50  # adjust this value to change the padding
+        board_size = min(self.layout.width, self.layout.height) - 2 * padding
+        fen_rows = self.fen_string.split('/')
+        with self.layout.canvas:
+            # Draw the squares
+            for i in range(8):
+                for j in range(8):
+                    if (i + j) % 2 == 0:
+                        Color(1, 1, 1)  # white
+                    else:
+                        Color(0.44, 0.26, 0.08)  # Brown
+                        
+                    square_size = (board_size / 8, board_size / 8)
+                    square_pos = ((self.layout.width / 2) - 4 * square_size[0] + j * square_size[0], 
+                                (self.layout.height / 2) - 4 * square_size[1] + i * square_size[1])
+                    Rectangle(pos=square_pos, size=square_size)
+            for i in range(8):
+                for j in range(8):
+                    fen_row = fen_rows[i]
+                    if j < len(fen_row):
+                        piece = fen_row[j]
+                        if piece in piece_img_dict:
+                            piece_img_path = piece_img_dict[piece]
+                            piece_size = (board_size / 8, board_size / 8)
+                            piece_pos = ((self.layout.width / 2) - 4 * piece_size[0] + j * piece_size[0],
+                                        (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1])
+                            Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
+
+
+
+           
+
+
+        
+
+
+    
+
+   
+
+
+   
+    
+
+
 
 
 
@@ -189,10 +489,12 @@ class MyApp(App):
         sm = ScreenManager(transition = FadeTransition())
         sm.add_widget(MainMenu(name='main_menu'))
         sm.add_widget(CalibrationMenu(name='calibration_menu'))
+        sm.add_widget(StartNewGameMenu(name='start_new_game_menu'))
+        sm.add_widget(LoadExistingGameMenu(name='load_existing_game_menu'))
+        sm.add_widget(GameWindow(name='game_window'))
+
         return sm
 
 if __name__ == '__main__':
     MyApp().run()
-
-
 
