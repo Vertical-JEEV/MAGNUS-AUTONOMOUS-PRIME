@@ -405,63 +405,84 @@ class CalibrationMenu(Screen):
 class GameWindow(Screen):
     def __init__(self, **kwargs):
         super(GameWindow, self).__init__(**kwargs)
+        self.fen_string = "8/2q2k2/4p3/1P2P3/4K3/8/8/8"
         self.layout = RelativeLayout()
         self.layout.add_widget(Label(text='Game Window', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF')))
-        self.fen_string = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR'
         self.add_widget(self.layout)
         self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
-        self.draw_chessboard(self, None)
+       
         
 
 
     def draw_chessboard(self, instance, value):
        # capital letters are White, lower case is black
+     
         piece_img_dict = { 
-        'P': r'interface_module\images\black_pieces\bP.png',
-        'N': r'interface_module\images\black_pieces\bN.png',
-        'B': r'interface_module\images\black_pieces\bB.png',
-        'R': r'interface_module\images\black_pieces\bR.png',
-        'Q': r'interface_module\images\black_pieces\bQ.png',
-        'K': r'interface_module\images\black_pieces\bK.png',
-        'p': r'interface_module\images\white_pieces\wP.png',
-        'n': r'interface_module\images\white_pieces\wN.png',
-        'b': r'interface_module\images\white_pieces\wB.png',
-        'r': r'interface_module\images\white_pieces\wR.png',
-        'q': r'interface_module\images\white_pieces\wQ.png',
-        'k': r'interface_module\images\white_pieces\wK.png',
-        }
+    'P': r'interface_module\images\white_pieces\wP.png',
+    'N': r'interface_module\images\white_pieces\wN.png',
+    'B': r'interface_module\images\white_pieces\wB.png',
+    'R': r'interface_module\images\white_pieces\wR.png',
+    'Q': r'interface_module\images\white_pieces\wQ.png',
+    'K': r'interface_module\images\white_pieces\wK.png',
+    'p': r'interface_module\images\black_pieces\bP.png',
+    'n': r'interface_module\images\black_pieces\bN.png',
+    'b': r'interface_module\images\black_pieces\bB.png',
+    'r': r'interface_module\images\black_pieces\bR.png',
+    'q': r'interface_module\images\black_pieces\bQ.png',
+    'k': r'interface_module\images\black_pieces\bK.png',
+    }
         self.layout.canvas.clear()
         padding = 50  # adjust this value to change the padding
         board_size = min(self.layout.width, self.layout.height) - 2 * padding
         fen_rows = self.fen_string.split('/')
         with self.layout.canvas:
-            # Draw the squares
+            #Draw the squares
             for i in range(8):
                 for j in range(8):
                     if (i + j) % 2 == 0:
-                        Color(1, 1, 1)  # white
+                        Color(0.44, 0.26, 0.08) # brown
                     else:
-                        Color(0.44, 0.26, 0.08)  # Brown
-                        
+                        Color(1, 1, 1) # white  
                     square_size = (board_size / 8, board_size / 8)
                     square_pos = ((self.layout.width / 2) - 4 * square_size[0] + j * square_size[0], 
                                 (self.layout.height / 2) - 4 * square_size[1] + i * square_size[1])
                     Rectangle(pos=square_pos, size=square_size)
-            for i in range(8):
-                for j in range(8):
-                    fen_row = fen_rows[i]
-                    if j < len(fen_row):
-                        piece = fen_row[j]
+                    
+
+                    fen_row = fen_rows[7-i]
+                    expanded_fen_row = ''
+                    for char in fen_row:
+                        if char.isdigit():
+                            expanded_fen_row += ' ' * int(char)
+                        else:
+                            expanded_fen_row += char
+
+                    if j < len(expanded_fen_row):
+                        piece = expanded_fen_row[j]
                         if piece in piece_img_dict:
+                            Color(1,1,1)
                             piece_img_path = piece_img_dict[piece]
                             piece_size = (board_size / 8, board_size / 8)
                             piece_pos = ((self.layout.width / 2) - 4 * piece_size[0] + j * piece_size[0],
-                                        (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1])
+                                    (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1])
                             Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
+                   
+          
 
 
 
-           
+
+
+
+            
+
+                        
+
+            
+                    
+
+
+            
 
 
         
