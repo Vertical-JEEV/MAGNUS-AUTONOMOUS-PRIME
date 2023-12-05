@@ -406,10 +406,18 @@ class GameWindow(Screen):
     def __init__(self, **kwargs):
         super(GameWindow, self).__init__(**kwargs)
         self.fen_string = "8/2q2k2/4p3/1P2P3/4K3/8/8/8"
-        self.layout = RelativeLayout()
-        self.layout.add_widget(Label(text='Game Window', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF')))
+        self.layout = RelativeLayout(size_hint=(1, 0.8), pos_hint={'top': 0.8})
         self.add_widget(self.layout)
         self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
+        self.draw_chessboard(self, None)
+        self.add_widget(Label(text='Game Window', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF'), pos_hint={'top': 1}))
+
+
+
+
+
+        # 
+
        
         
 
@@ -432,7 +440,7 @@ class GameWindow(Screen):
     'k': r'interface_module\images\black_pieces\bK.png',
     }
         self.layout.canvas.clear()
-        padding = 50  # adjust this value to change the padding
+        padding = 1  # adjust this value to change the padding
         board_size = min(self.layout.width, self.layout.height) - 2 * padding
         fen_rows = self.fen_string.split('/')
         with self.layout.canvas:
@@ -466,6 +474,17 @@ class GameWindow(Screen):
                             piece_pos = ((self.layout.width / 2) - 4 * piece_size[0] + j * piece_size[0],
                                     (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1])
                             Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
+
+
+        def exit_game(self, instance):
+            # Switch to the main menu
+            self.manager.current = 'main_menu'
+
+
+
+
+
+        
                    
           
 
