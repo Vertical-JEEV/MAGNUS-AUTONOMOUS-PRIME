@@ -13,6 +13,7 @@ from kivy.graphics import Color, Rectangle
 from kivy.graphics import Line
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.anchorlayout import AnchorLayout
 import re
 
 
@@ -405,46 +406,64 @@ class CalibrationMenu(Screen):
 class GameWindow(Screen):
     def __init__(self, **kwargs):
         super(GameWindow, self).__init__(**kwargs)
-        self.fen_string = "8/2q2k2/4p3/1P2P3/4K3/8/8/8"
-        self.layout = RelativeLayout(size_hint=(1, 0.8), pos_hint={'top': 0.8})
-        self.add_widget(self.layout)
+        self.fen_string = None
+        self.user_score = None
+        self.robo_score = None
+
+        # Create a BoxLayout as the root widget with horizontal orientation
+        self.root_layout = BoxLayout(orientation='horizontal')
+        self.add_widget(self.root_layout)
+
+        # Add a label for the user score to the root layout
+        self.user_score_label = Label(text='User Score: 0', size_hint_x=0.1)
+        self.root_layout.add_widget(self.user_score_label)
+
+        # Create a BoxLayout for the chessboard and the score labels
+        self.chessboard_layout = BoxLayout(orientation='vertical')
+        self.root_layout.add_widget(self.chessboard_layout)
+
+        # Add the chessboard layout to the chessboard layout
+        self.layout = GridLayout(cols=8, size_hint_y=0.9)
+        self.chessboard_layout.add_widget(self.layout)
+
+        # Add a label for the robo score to the root layout
+        self.robo_score_label = Label(text='Robo Score: 0', size_hint_x=0.1)
+        self.root_layout.add_widget(self.robo_score_label)
+
+        # Add the button layout to the chessboard layout
+        self.button_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1)
+        self.chessboard_layout.add_widget(self.button_layout)
+
+        # Add the buttons
+        self.add_buttons_layout()
+
+        # Draw the chessboard
         self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
-        self.draw_chessboard(self, None)
-        self.add_widget(Label(text='Game Window', font_size ='20sp', bold = True, color = get_color_from_hex('#FFFFFF'), pos_hint={'top': 1}))
-
-
-
-
-
-        # 
-
-       
-        
 
 
     def draw_chessboard(self, instance, value):
        # capital letters are White, lower case is black
-     
         piece_img_dict = { 
-    'P': r'interface_module\images\white_pieces\wP.png',
-    'N': r'interface_module\images\white_pieces\wN.png',
-    'B': r'interface_module\images\white_pieces\wB.png',
-    'R': r'interface_module\images\white_pieces\wR.png',
-    'Q': r'interface_module\images\white_pieces\wQ.png',
-    'K': r'interface_module\images\white_pieces\wK.png',
-    'p': r'interface_module\images\black_pieces\bP.png',
-    'n': r'interface_module\images\black_pieces\bN.png',
-    'b': r'interface_module\images\black_pieces\bB.png',
-    'r': r'interface_module\images\black_pieces\bR.png',
-    'q': r'interface_module\images\black_pieces\bQ.png',
-    'k': r'interface_module\images\black_pieces\bK.png',
-    }
+        'P': r'interface_module\images\white_pieces\wP.png',
+        'N': r'interface_module\images\white_pieces\wN.png',
+        'B': r'interface_module\images\white_pieces\wB.png',
+        'R': r'interface_module\images\white_pieces\wR.png',
+        'Q': r'interface_module\images\white_pieces\wQ.png',
+        'K': r'interface_module\images\white_pieces\wK.png',
+        'p': r'interface_module\images\black_pieces\bP.png',
+        'n': r'interface_module\images\black_pieces\bN.png',
+        'b': r'interface_module\images\black_pieces\bB.png',
+        'r': r'interface_module\images\black_pieces\bR.png',
+        'q': r'interface_module\images\black_pieces\bQ.png',
+        'k': r'interface_module\images\black_pieces\bK.png',
+        }
         self.layout.canvas.clear()
-        padding = 1  # adjust this value to change the padding
-        board_size = min(self.layout.width, self.layout.height) - 2 * padding
-        fen_rows = self.fen_string.split('/')
+        padding = 0 # adjust this value to change the padding
+        board_size = min(self.layout.width, self.layout.height - self.button_layout.height) - 2 * padding
+        fen_rows = self.fen_string.split('/') if self.fen_string else "8/8/8/8/8/8/8/8"
+
         with self.layout.canvas:
-            #Draw the squares
+            # Draw the squares
             for i in range(8):
                 for j in range(8):
                     if (i + j) % 2 == 0:
@@ -453,10 +472,9 @@ class GameWindow(Screen):
                         Color(1, 1, 1) # white  
                     square_size = (board_size / 8, board_size / 8)
                     square_pos = ((self.layout.width / 2) - 4 * square_size[0] + j * square_size[0], 
-                                (self.layout.height / 2) - 4 * square_size[1] + i * square_size[1])
+                                (self.layout.height / 2) - 4 * square_size[1] + i * square_size[1] + self.button_layout.height / 2)
                     Rectangle(pos=square_pos, size=square_size)
                     
-
                     fen_row = fen_rows[7-i]
                     expanded_fen_row = ''
                     for char in fen_row:
@@ -472,13 +490,70 @@ class GameWindow(Screen):
                             piece_img_path = piece_img_dict[piece]
                             piece_size = (board_size / 8, board_size / 8)
                             piece_pos = ((self.layout.width / 2) - 4 * piece_size[0] + j * piece_size[0],
-                                    (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1])
+                                    (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1] + self.button_layout.height / 2)
                             Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
 
 
-        def exit_game(self, instance):
-            # Switch to the main menu
-            self.manager.current = 'main_menu'
+    def add_buttons_layout(self):
+        # create a horizontal BoxLayout for the save and exit buttons
+        # Add buttons
+        save_button = Button(text='Save', size_hint_x=0.5, height=40, color=get_color_from_hex('#FFFFFF'))
+        save_button.bind(on_press=self.save_game)
+        self.button_layout.add_widget(save_button)
+        #add a button to exit the game menu
+        exit_button = Button(text='Exit', size_hint_x=0.5, height=40, color=get_color_from_hex('#FFFFFF'))
+        exit_button.bind(on_press=self.exit_game)
+        self.button_layout.add_widget(exit_button)
+
+
+    def save_game(self, instance):
+        # Get the first popup
+        game_name_popup = self.get_game_name_popup()
+        # Bind the on_dismiss event of the first popup to a function that opens the second popup
+        game_name_popup.bind(on_dismiss=lambda _: self.show_msg_popup("Game has been saved", ""))
+        # Open the first popup
+        game_name_popup.open()
+
+
+    def exit_game(self, instance):
+        # Switch to the main menu
+        self.manager.current = 'main_menu'
+
+
+    def get_game_name_popup(self):
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Enter game name'))
+        self.game_name = TextInput(multiline=False, hint_text='Enter game name')
+        content.add_widget(self.game_name)
+        button = Button(text='Save')
+        content.add_widget(button)
+        # Create the pop-up
+        popup = Popup(title='Save game', content=content,size_hint=(None, None), size=(400, 200), auto_dismiss=False)
+        # Bind the on_press event of the button to the dismiss method of the pop-up
+        button.bind(on_press=popup.dismiss)
+        # Return the pop-up instead of opening it
+        return popup
+    
+
+    def show_msg_popup(self, msg, popup_title):
+        # Create a custom layout for the content
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text=msg))
+        button = Button(text='Close')
+        content.add_widget(button)
+        # Create the pop-up
+        popup = Popup(title=popup_title, content=content,size_hint=(None, None), size=(400, 200), auto_dismiss=False)
+        # Bind the on_press event of the button to the dismiss method of the pop-up
+        button.bind(on_press=popup.dismiss)
+        # Open the pop-up
+        popup.open()
+
+
+    def update_game(self, fen_string, user_score, robo_score):
+        self.fen_string = fen_string
+        self.user_score = user_score
+        self.robo_score = robo_score
+        self.draw_chessboard(self, None)
 
 
 
