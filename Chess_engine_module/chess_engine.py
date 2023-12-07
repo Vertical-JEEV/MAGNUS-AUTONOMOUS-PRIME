@@ -92,41 +92,6 @@ class ChessEngine:
         return white_score, black_score
     
 
-def test_chess_engine():
-    # Create a ChessEngine instance
-    engine = ChessEngine(1700, None)
-    print(engine.board)
-  
-    #Test get_best_move method
-    best_move = engine.get_best_move()
-    print(f"Best move: {best_move}")
-
-    # Test update_board method
-    is_valid = engine.update_board(best_move)
-    print(f"Is the move valid? {is_valid}")
-    print(engine.board)
-
-    # Test get_board_fen method
-    fen = engine.get_board_fen()
-    print(f"FEN: {fen}")
-
-    # Test check_valid_fen method
-    is_fen_valid = engine.check_valid_fen()
-    print(f"Is the FEN valid? {is_fen_valid}")
-
-    # Test check_for_checkmate and check_for_stalemate methods
-    is_checkmate = engine.check_for_checkmate()
-    is_stalemate = engine.check_for_stalemate()
-    print(f"Is it checkmate? {is_checkmate}")
-    print(f"Is it stalemate? {is_stalemate}")
-
-    # Test get_score and get_players_scores methods
-    
-    white_score, black_score = engine.get_players_scores()
-   
-    print(f"White score: {white_score}, Black score: {black_score}")
-
-test_chess_engine()
 
     
 
