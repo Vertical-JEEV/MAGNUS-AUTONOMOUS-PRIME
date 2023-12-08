@@ -14,6 +14,7 @@ from kivy.graphics import Line
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.anchorlayout import AnchorLayout
+from kivy.clock import Clock
 import re
 
 
@@ -407,39 +408,43 @@ class GameWindow(Screen):
     def __init__(self, **kwargs):
         super(GameWindow, self).__init__(**kwargs)
         self.fen_string = None
-        self.user_score = None
-        self.robo_score = None
 
-        # Create a BoxLayout as the root widget with horizontal orientation
-        self.root_layout = BoxLayout(orientation='horizontal')
+        # Create an AnchorLayout as the root widget
+        self.root_layout = AnchorLayout()
         self.add_widget(self.root_layout)
 
-        # Add a label for the user score to the root layout
-        self.user_score_label = Label(text='User Score: 0', size_hint_x=0.1)
-        self.root_layout.add_widget(self.user_score_label)
+        # Create a GridLayout for the scores and chessboard with 3 columns
+        self.grid_layout = GridLayout(cols=3)
+        self.root_layout.add_widget(self.grid_layout)
 
-        # Create a BoxLayout for the chessboard and the score labels
+        # Add a label for the user score to the grid layout
+        self.user_score_label = Label(text='User Score: 0')
+        self.grid_layout.add_widget(self.user_score_label)
+
+        # Create a BoxLayout for the chessboard
         self.chessboard_layout = BoxLayout(orientation='vertical')
-        self.root_layout.add_widget(self.chessboard_layout)
+        self.grid_layout.add_widget(self.chessboard_layout)
 
         # Add the chessboard layout to the chessboard layout
-        self.layout = GridLayout(cols=8, size_hint_y=0.9)
+        self.layout = GridLayout(cols=8)
         self.chessboard_layout.add_widget(self.layout)
 
-        # Add a label for the robo score to the root layout
-        self.robo_score_label = Label(text='Robo Score: 0', size_hint_x=0.1)
-        self.root_layout.add_widget(self.robo_score_label)
+        # Add a label for the robo score to the grid layout
+        self.robo_score_label = Label(text='Robo Score: 0')
+        self.grid_layout.add_widget(self.robo_score_label)
 
-        # Add the button layout to the chessboard layout
-        self.button_layout = BoxLayout(orientation='horizontal', size_hint_y=0.1)
-        self.chessboard_layout.add_widget(self.button_layout)
+        # Create a BoxLayout for the buttons at the bottom
+        self.button_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=40)
+        self.root_layout.anchor_y = 'bottom'
+        self.root_layout.add_widget(self.button_layout)
+
+        #Clock.schedule_once(lambda _: self.draw_chessboard(self, None))
 
         # Add the buttons
         self.add_buttons_layout()
 
         # Draw the chessboard
         self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
-
 
     def draw_chessboard(self, instance, value):
        # capital letters are White, lower case is black
@@ -471,8 +476,12 @@ class GameWindow(Screen):
                     else:
                         Color(1, 1, 1) # white  
                     square_size = (board_size / 8, board_size / 8)
-                    square_pos = ((self.layout.width / 2) - 4 * square_size[0] + j * square_size[0], 
-                                (self.layout.height / 2) - 4 * square_size[1] + i * square_size[1] + self.button_layout.height / 2)
+                    # Calculate the square position
+                    square_pos = ((self.chessboard_layout.width / 2) - 4 * square_size[0] + j * square_size[0], 
+                                (self.chessboard_layout.height / 2) - 4 * square_size[1] + i * square_size[1] + self.button_layout.height / 2)
+
+
+
                     Rectangle(pos=square_pos, size=square_size)
                     
                     fen_row = fen_rows[7-i]
@@ -489,8 +498,7 @@ class GameWindow(Screen):
                             Color(1,1,1)
                             piece_img_path = piece_img_dict[piece]
                             piece_size = (board_size / 8, board_size / 8)
-                            piece_pos = ((self.layout.width / 2) - 4 * piece_size[0] + j * piece_size[0],
-                                    (self.layout.height / 2) - 4 * piece_size[1] + i * piece_size[1] + self.button_layout.height / 2)
+                            piece_pos = ((self.chessboard_layout.width / 2) - 4 * piece_size[0] + j * piece_size[0], (self.chessboard_layout.height / 2) - 4 * piece_size[1] + i * piece_size[1] + self.button_layout.height / 2)
                             Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
 
 
@@ -554,47 +562,6 @@ class GameWindow(Screen):
         self.user_score = user_score
         self.robo_score = robo_score
         self.draw_chessboard(self, None)
-
-
-
-
-
-        
-                   
-          
-
-
-
-
-
-
-            
-
-                        
-
-            
-                    
-
-
-            
-
-
-        
-
-
-    
-
-   
-
-
-   
-    
-
-
-
-
-
-
 
 
   

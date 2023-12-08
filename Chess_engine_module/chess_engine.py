@@ -2,14 +2,15 @@ import chess
 import chess.engine
 
 
-
-
-
 class ChessEngine:
 
- 
-    STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
-    engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
+    try:
+        STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
+        engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
+
+    except:
+        STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-modern\stockfish\stockfish-windows-x86-64-modern.exe"
+        engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
 
 
     def __init__(self, elo, fen_string):

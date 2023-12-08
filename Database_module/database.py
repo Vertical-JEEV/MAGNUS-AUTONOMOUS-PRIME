@@ -25,7 +25,6 @@ class Database:
             # combine key and value pairs into a string so that ie field name next to its data type
             fields_with_type = [f"{field} {field_type}" for field, field_type in self.fields_dict.items()]
             fields_string = ", ".join(fields_with_type)
-
             # create the table
             self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {self.table_name} (primary_key INTEGER PRIMARY KEY AUTOINCREMENT, {fields_string})")
         except sql.Error as e:
@@ -43,11 +42,9 @@ class Database:
             print("Unable to get record")
     
 
-
     def delete_record(self, primary_key):
         # delete a record from the table using the primary key
         try:
-            
             self.cursor.execute(f"DELETE FROM {self.table_name} WHERE primary_key = ?", (primary_key,))
             self.db.commit()
             print("Record deleted")
@@ -55,8 +52,8 @@ class Database:
             print("Unable to delete record")
 
 
-
 class GamesDatabase(Database):
+
 
     def __init__(self):
         self.database_name = r"Database_module\saved_games.db"
@@ -76,7 +73,6 @@ class GamesDatabase(Database):
         # check if the game name is empty or if it already exists
         if game_name == "" or game_name in games:
             return False
-    
         return True
 
 
@@ -90,10 +86,8 @@ class GamesDatabase(Database):
             if not self.check_game_name(game_name):
                 # throw an error if the game name is invalid
                 raise sql.Error
-            
             # create a string of just the fields
             fields_string = ", ".join(self.fields_dict.keys())
-
             self.cursor.execute(f"INSERT INTO {self.table_name} ({fields_string}) VALUES ({values_string})", values)
             self.db.commit()
             print("Record inserted")
@@ -107,7 +101,6 @@ class GamesDatabase(Database):
             if not self.check_game_name(value):
                 # throw an error if the game name is invalid
                 raise sql.Error
-            
             self.cursor.execute(f"UPDATE {self.table_name} SET game_name = ? WHERE primary_key = ?", (value, primary_key))
             self.db.commit()
             print("Record updated")
@@ -115,9 +108,8 @@ class GamesDatabase(Database):
             print("Unable to update record")
 
 
-
-
 class UserParametersDatabase(Database):
+
 
     def __init__(self):
         self.database_name = r"Database_module\user_parameters.db"   
@@ -136,7 +128,6 @@ class UserParametersDatabase(Database):
             return False
 
 
-
     def insert_record(self, values):
         # insert a record into the table adding corresponding values
         try:
@@ -145,12 +136,10 @@ class UserParametersDatabase(Database):
             # check if the values are floats
             if not self.check_float_values(values_copy):
                 raise sql.Error
-            
             # create a string of question marks for the values
             values_string = ", ".join(["?" for value in values])
             # create a string of just the fields
             fields_string = ", ".join(self.fields_dict.keys())
-
             self.cursor.execute(f"INSERT INTO {self.table_name} ({fields_string}) VALUES ({values_string})", values)
             self.db.commit()
             print("Record inserted")
@@ -164,17 +153,7 @@ class UserParametersDatabase(Database):
 
     
 
-def main():
-    parameters_db = UserParametersDatabase()
-    
 
-
-
-   
-    
-    
-
-main()
 
 
 
