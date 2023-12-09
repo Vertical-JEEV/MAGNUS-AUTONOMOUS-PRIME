@@ -23,12 +23,6 @@ class ArduinoComunicator:
             if TARGET_HARDWARE in port.description:
                 return port.device
             
-    
-    def valid_angle(self, min_angle, max_angle, calculated_angle):
-        if min_angle <= calculated_angle <= max_angle:
-            return True
-        return False
-
             
     def inverse_kinematics(self, chesspiece_3d_coordinate):
         # code for inverse kinematics
@@ -68,7 +62,7 @@ class ArduinoComunicator:
         return joint_angle_string
 
 
-    def pass_joint_angles_to_arm(self, chesspiece_3d_coordinate):
+    def move_arm(self, chesspiece_3d_coordinate):
         joint_angle_string = self.inverse_kinematics(chesspiece_3d_coordinate)
         arduino_connection = serial.Serial(self.COM_PORT, self.BAUDRATE)
         # need to add delay or else arduino or else arduino wont register it
@@ -77,6 +71,9 @@ class ArduinoComunicator:
         joint_angle_string = joint_angle_string.encode() #  encode the string to bytes for arduino to understand
         arduino_connection.write(joint_angle_string)
         arduino_connection.close()
+
+
+        
 
 
 
