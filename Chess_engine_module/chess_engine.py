@@ -7,10 +7,14 @@ class ChessEngine:
     try:
         STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
         engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
+        print("using faster stockfish")
 
     except:
         STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-modern\stockfish\stockfish-windows-x86-64-modern.exe"
         engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
+        print("using modern stockfish")
+
+    
 
 
     def __init__(self, elo, fen_string):
@@ -75,26 +79,32 @@ class ChessEngine:
         # check if stalemate
         return self.board.is_stalemate()
     
-
-    def get_score(self):
-        # get score from stockfish
-        info = self.engine.analyse(self.board, chess.engine.Limit(time=0.1))
-        if info["score"].relative.score() is not None:
-            score = info["score"].relative.score(mate_score=10000) 
-        else:
-            score = 100 if info["score"].relative.mate() == 1 else 0
-        return score
-    
-    def get_players_scores(self):
-        white_score = self.get_score()
-        self.board = self.board.mirror() # Flip the board to get the black score
-        black_score = self.get_score()
-        self.board = self.board.mirror()  # Flip the board back to its original state
-        return white_score, black_score
+    def check_for_draw(self):
+        # check if draw
+        return self.board.is_insufficient_material()
     
 
+    def check_for_threefold_repetition(self):
+        # check if threefold repetition
+        return self.board.is_repetition(3)
+    
+    def __del__(self):
+        try:
+            self.engine.quit()
+        except chess.engine.EngineTerminatedError:
+            pass
+
+     
+
+
+
+
+
 
     
+
+
+
 
 
     
