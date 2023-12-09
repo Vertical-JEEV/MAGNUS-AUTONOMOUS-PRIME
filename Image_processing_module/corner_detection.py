@@ -5,7 +5,7 @@ import numpy as np
 
 class ChessboardCornerDetection:
 
-    def __init__(self, ):
+    def __init__(self):
         self.original_img = None
         self.drawing_original_img = None # original image
         self.processing_img = None # mage used for processing
@@ -13,6 +13,8 @@ class ChessboardCornerDetection:
         self.transformation_matrix = None # matrix to apply perspective transform for top down view
         self.inverse_tranformation_matrix = None # matrix to get from top down view to original view
         self.pixel_coordinates = None # the coordinate of each corner in each square in the original image
+        self.uci_positions = None
+        self.corners_dict = {}
         
       
     def __pre_process_img(self):
@@ -43,7 +45,6 @@ class ChessboardCornerDetection:
             left = left[left[:,1].argsort()] # sort by y
             right = right[right[:,1].argsort()] # sort by y
             corners = np.array([right[0], right[1], left[1], left[0]], dtype='float32')
-
             if len(corners) == 4:
                 # draw the corners on the original image with the index of the list of corners
                 # for i, corner in enumerate(corners):
@@ -70,9 +71,9 @@ class ChessboardCornerDetection:
         self.transformation_matrix = cv2.getPerspectiveTransform(corners_for_perspective_transform, destination_points)
         self.inverse_tranformation_matrix = cv2.getPerspectiveTransform(destination_points, corners_for_perspective_transform)
         # apply the transformation matrix to the cropped image
-        self.warped_img = cv2.warpPerspective(self.original_img, self.transformation_matrix, (WIDTH, HEIGHT))
+        self.warped_img = cv2.warpPerspective(self.drawing_original_img, self.transformation_matrix, (WIDTH, HEIGHT))
         # show the top down view of the chessboard
-        # cv2.imshow('Warped image', self.warped_img)
+        #cv2.imshow('Warped image', self.warped_img)
 
     
     def __get_pixel_coordinates_using_shi_tomasi_on_warped_img(self):
@@ -80,8 +81,11 @@ class ChessboardCornerDetection:
         # convert warped image to grayscale
         self.warped_img = cv2.cvtColor(self.warped_img, cv2.COLOR_BGR2GRAY)
         # apply a strong gaussian blur to prevent numbers and letters of the chessboard from being detected as corners
-        self.warped_img = cv2.GaussianBlur(self.warped_img, (15, 15), 0)
+        self.warped_img = cv2.GaussianBlur(self.warped_img, (13, 13), 0)
         # using the shi- tomasi algorithm to find each corner of each square on the chessboard
+        # show the warped image 
+        #cv2.imshow('Warped image', self.warped_img)
+
         try:
             corners = cv2.goodFeaturesToTrack(self.warped_img, 81, 0.02, 40)
             # improve accuracy of corners, using subpixel accuracy
@@ -128,12 +132,35 @@ class ChessboardCornerDetection:
             print("No corners found")
 
 
+    def map_corners_to_uci_positions(self):
+        uci_positions = {}
+        corners = np.array(self.pixel_coordinates).squeeze()
+        for i in range(8):
+            for j in range(8):
+                # Calculate the indices of the corners in the sorted corners array
+                bottom_left = i * 9 + j
+                bottom_right = i * 9 + j + 1
+                top_left = (i + 1) * 9 + j
+                top_right = (i + 1) * 9 + j + 1
+                # Assign a letter and number to the square
+                letter = chr(ord('a') + j)
+                number = i+1
+                # Use the letter and number as the key, and the corresponding corners as the value
+                uci_positions[f'{letter}{number}'] = [
+                    corners[bottom_left].tolist(),
+                    corners[bottom_right].tolist(),
+                    corners[top_left].tolist(),
+                    corners[top_right].tolist()
+                ]
+        self.uci_positions = uci_positions
+
+    
     def recognise_corners(self, frame):
         # use our class to process the images and get corners
         # set the original image and processing image to the frame
         self.original_img = frame
-        self.drawing_original_img = frame
-        self.processing_img = frame
+        self.drawing_original_img = frame.copy()
+        self.processing_img = frame.copy()
         # pre process the image for getting the chessboard
         self.__pre_process_img()
         # locate the chessboard by finding largest contour
@@ -144,11 +171,37 @@ class ChessboardCornerDetection:
             self.__crop_and_get_top_down_view_of_chessboard(corners_for_perspective_transform)
             #get the pixel coordinates of each corner of each square on the chessboard, passing in false so that we draw the corners
             self.__get_pixel_coordinates_using_shi_tomasi_on_warped_img()
+            #map the corners to uci positions
+            self.map_corners_to_uci_positions()
+
             #cv2.imshow('Warped image', self.warped_img)
         # show the images
         # cv2.imshow('original image', self.original_img)
         # cv2.imshow('drawing original image', self.drawing_original_img)
         # cv2.imshow('Processing image', self.processing_img)
+
+
+
+
+# def test():
+#     # create a chessboard corner detection object
+#     chessboard_corner_detection = ChessboardCornerDetection()
+#     cap = cv2.VideoCapture(0)
+#     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)
+#     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1000)
+#     while True:
+#         # Capture frame-by-frame
+#         ret, frame = cap.read()
+#         chessboard_corner_detection.recognise_corners(frame)
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+
+#     print(chessboard_corner_detection.pixel_coordinates)
+
+
+# test()
+
+
+
+
     
-
-
