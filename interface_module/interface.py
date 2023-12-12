@@ -12,9 +12,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.graphics import Color, Rectangle
 from kivy.graphics import Line
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.anchorlayout import AnchorLayout
-from kivy.clock import Clock
+
 import re
 
 

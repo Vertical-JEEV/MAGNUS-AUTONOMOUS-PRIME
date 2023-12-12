@@ -14,7 +14,7 @@ class ChessboardCornerDetection:
         self.inverse_tranformation_matrix = None # matrix to get from top down view to original view
         self.pixel_coordinates = None # the coordinate of each corner in each square in the original image
         self.uci_positions = None
-        self.corners_dict = {}
+        
         
       
     def __pre_process_img(self):
@@ -121,10 +121,10 @@ class ChessboardCornerDetection:
                 corners = np.float32(self.pixel_coordinates)
                 self.pixel_coordinates = np.reshape(self.pixel_coordinates, (81, 1, 2))
                 #draw the corners on the original image and add text of the current index to the
-                # for i in range(len(corners)):
-                #     cv2.circle(self.drawing_original_img, (int(corners[i][0]), int(corners[i][1])), 2, (0, 0, 255), -1)
-                #     #add the order of the corners to the image
-                #     cv2.putText(self.drawing_original_img, str(i), (int(corners[i][0]), int(corners[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                for i in range(len(corners)):
+                    cv2.circle(self.drawing_original_img, (int(corners[i][0]), int(corners[i][1])), 2, (0, 0, 255), -1)
+                    #add the order of the corners to the image
+                    cv2.putText(self.drawing_original_img, str(i), (int(corners[i][0]), int(corners[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 # draw chessboard corners with drawchessboarcorners
                 #cv2.drawChessboardCorners(self.drawing_original_img, (9, 9), corners, True)
                 # show the original image with the corners
@@ -175,7 +175,7 @@ class ChessboardCornerDetection:
             self.map_corners_to_uci_positions()
 
             #cv2.imshow('Warped image', self.warped_img)
-        # show the images
+        #show the images
         # cv2.imshow('original image', self.original_img)
         # cv2.imshow('drawing original image', self.drawing_original_img)
         # cv2.imshow('Processing image', self.processing_img)
