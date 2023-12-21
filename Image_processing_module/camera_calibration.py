@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from corner_detection import ChessboardCornerDetection # our own class for corner detection
+from .corner_detection import ChessboardCornerDetection # our own class for corner detection
 
 
 
@@ -12,6 +12,7 @@ class CameraCalibration:
         self.WIDTH = float(CHESSBOARD_DIMENSIONS.strip().split("x")[0])/8
         self.HEIGHT = float(CHESSBOARD_DIMENSIONS.strip().split("x")[1])/8
         self.NUM_X_DIRECTION_CORNERS = self.NUM_Y_DIRECTION_CORNERS = 9
+        self.frame = None
 
 
     def __generate_3d_corners_for_calibration(self):
@@ -70,6 +71,7 @@ class CameraCalibration:
             # Capture frame-by-frame
             ret, frame = cap.read()
             corner_detection.recognise_corners(frame)
+            self.frame = corner_detection.drawing_original_img
         
             # if the user presses s then we save the image and object points for calibration. we will change this we start combining this with the robotic arm to move.
             if cv2.waitKey(1) & 0xFF == ord('s'):

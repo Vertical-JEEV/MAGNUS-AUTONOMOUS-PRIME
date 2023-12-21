@@ -35,13 +35,13 @@ class ChessboardChangeDetector:
             cv2.imshow("Difference", diff)
 
             # Apply adaptive thresholding
-            thresh = cv2.adaptiveThreshold(diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 1)
-            kernel = np.ones((5,5),np.uint8)
+            thresh = cv2.adaptiveThreshold(diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+#             kernel = np.ones((5,5),np.uint8)
 
-# Apply morphological opening
-            thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-            # show the thresholded image 
-            cv2.imshow("Thresholded", thresh)
+# # Apply morphological opening
+#             thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+#             # show the thresholded image 
+#             cv2.imshow("Thresholded", thresh)
 
 
             # Compute the absolute difference between the old image and the new image
@@ -66,12 +66,18 @@ class ChessboardChangeDetector:
 
                 # Extract the region of interest from the thresholded image
                 roi = thresh[min_y:max_y, min_x:max_x]
+               
+                # show the new image
+                
+
 
                 # If there are any changes in the region of interest, return the UCI position
                 if np.any(roi):
-                    if self.last_detected_uci == uci:
-                        continue
-                    self.last_detected_uci = uci
+                     # draw the bounding rectangle
+                    new_img_copy = self.new_img.copy()
+                    cv2.rectangle(new_img_copy, (min_x, min_y), (max_x, max_y), (0, 255, 0), 2)
+                    cv2.imshow("Chess Piece Tracker", new_img_copy)
+                        
                     return uci
                     changed_positions.append(uci)
 

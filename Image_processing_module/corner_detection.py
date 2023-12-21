@@ -176,9 +176,9 @@ class ChessboardCornerDetection:
 
             #cv2.imshow('Warped image', self.warped_img)
         #show the images
-        # cv2.imshow('original image', self.original_img)
-        # cv2.imshow('drawing original image', self.drawing_original_img)
-        # cv2.imshow('Processing image', self.processing_img)
+        cv2.imshow('original image', self.original_img)
+        cv2.imshow('drawing original image', self.drawing_original_img)
+        cv2.imshow('Processing image', self.processing_img)
 
 
 

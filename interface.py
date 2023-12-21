@@ -264,7 +264,9 @@ class LoadExistingGameMenu(Screen):
     def load_game(self, instance):
         
         print("game has started")
-        print(f"selected row is {self.selected_row.row_data}")
+        if self.selected_row is not None:
+            print(f"selected row is {self.selected_row.row_data}")
+        
         self.manager.current = 'game_window'
 
     def exit_game(self, instance):
@@ -416,9 +418,7 @@ class GameWindow(Screen):
         self.grid_layout = GridLayout(cols=3)
         self.root_layout.add_widget(self.grid_layout)
 
-        # Add a label for the user score to the grid layout
-        self.user_score_label = Label(text='User Score: 0')
-        self.grid_layout.add_widget(self.user_score_label)
+        
 
         # Create a BoxLayout for the chessboard
         self.chessboard_layout = BoxLayout(orientation='vertical')
@@ -428,9 +428,7 @@ class GameWindow(Screen):
         self.layout = GridLayout(cols=8)
         self.chessboard_layout.add_widget(self.layout)
 
-        # Add a label for the robo score to the grid layout
-        self.robo_score_label = Label(text='Robo Score: 0')
-        self.grid_layout.add_widget(self.robo_score_label)
+        #
 
         # Create a BoxLayout for the buttons at the bottom
         self.button_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=40)
@@ -440,7 +438,7 @@ class GameWindow(Screen):
         #Clock.schedule_once(lambda _: self.draw_chessboard(self, None))
 
         # Add the buttons
-        self.add_buttons_layout()
+        #self.add_buttons_layout()
 
         # Draw the chessboard
         self.layout.bind(size=self.draw_chessboard, pos=self.draw_chessboard)
@@ -501,60 +499,15 @@ class GameWindow(Screen):
                             Rectangle(source=piece_img_path, pos=piece_pos, size=piece_size)
 
 
-    def add_buttons_layout(self):
-        # create a horizontal BoxLayout for the save and exit buttons
-        # Add buttons
-        save_button = Button(text='Save', size_hint_x=0.5, height=40, color=get_color_from_hex('#FFFFFF'))
-        save_button.bind(on_press=self.save_game)
-        self.button_layout.add_widget(save_button)
-        #add a button to exit the game menu
-        exit_button = Button(text='Exit', size_hint_x=0.5, height=40, color=get_color_from_hex('#FFFFFF'))
-        exit_button.bind(on_press=self.exit_game)
-        self.button_layout.add_widget(exit_button)
+   
 
-
-    def save_game(self, instance):
-        # Get the first popup
-        game_name_popup = self.get_game_name_popup()
-        # Bind the on_dismiss event of the first popup to a function that opens the second popup
-        game_name_popup.bind(on_dismiss=lambda _: self.show_msg_popup("Game has been saved", ""))
-        # Open the first popup
-        game_name_popup.open()
-
-
-    def exit_game(self, instance):
-        # Switch to the main menu
-        self.manager.current = 'main_menu'
-
-
-    def get_game_name_popup(self):
-        content = BoxLayout(orientation='vertical')
-        content.add_widget(Label(text='Enter game name'))
-        self.game_name = TextInput(multiline=False, hint_text='Enter game name')
-        content.add_widget(self.game_name)
-        button = Button(text='Save')
-        content.add_widget(button)
-        # Create the pop-up
-        popup = Popup(title='Save game', content=content,size_hint=(None, None), size=(400, 200), auto_dismiss=False)
-        # Bind the on_press event of the button to the dismiss method of the pop-up
-        button.bind(on_press=popup.dismiss)
-        # Return the pop-up instead of opening it
-        return popup
     
 
-    def show_msg_popup(self, msg, popup_title):
-        # Create a custom layout for the content
-        content = BoxLayout(orientation='vertical')
-        content.add_widget(Label(text=msg))
-        button = Button(text='Close')
-        content.add_widget(button)
-        # Create the pop-up
-        popup = Popup(title=popup_title, content=content,size_hint=(None, None), size=(400, 200), auto_dismiss=False)
-        # Bind the on_press event of the button to the dismiss method of the pop-up
-        button.bind(on_press=popup.dismiss)
-        # Open the pop-up
-        popup.open()
 
+    
+
+
+    
 
     def update_game(self, fen_string, user_score, robo_score):
         self.fen_string = fen_string
@@ -578,4 +531,3 @@ class MyApp(App):
 
 if __name__ == '__main__':
     MyApp().run()
-
