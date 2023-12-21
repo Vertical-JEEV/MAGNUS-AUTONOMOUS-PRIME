@@ -149,6 +149,45 @@ class UserParametersDatabase(Database):
 
 
 
+def test_user_parametres_db():
+    user_parameters_db = UserParametersDatabase()
+    # inserting 2 records
+    user_parameters_db.insert_record(["8x8", 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, "intrinsic_parameters", "distortion_parameters", "extrinsic_parameters"])
+    user_parameters_db.insert_record(["8x10", 6, 55, 5, 4, 0.555, 0.53434, "intrinsic_parameters2", "distortion_parameters2", "extrinsic_parameters2"])
+    # reading both records
+    print(user_parameters_db.read_record(1))
+    print(user_parameters_db.read_record(2))
+    # deleting the first record
+    user_parameters_db.delete_record(1)
+    #reading both records, now only the second record should be there
+    print(user_parameters_db.read_record(1))
+    print(user_parameters_db.read_record(2))
+
+
+def test_games_db():
+    games_db = GamesDatabase()
+    # inserting 3 records
+    games_db.insert_record(["game1", "FEN_string", 1200, 0, 0, "white", ""])
+    games_db.insert_record(["game2", "FEN_string", 1200, 0, 0, "white", ""])
+    games_db.insert_record(["game3", "FEN_string", 1200, 0, 0, "white", ""])
+    # reading the first record
+    print(games_db.read_record(1))
+    # updating the first record
+    games_db.update_record(1, "game4")
+    # reading the first record, now it should be updated
+    print(games_db.read_record(1))
+    # deleting the second record
+    games_db.delete_record(2)
+    print(games_db.read_record(1))
+    print(games_db.read_record(2))
+    print(games_db.read_record(3))
+
+
+# test_user_parametres_db()
+# test_games_db()
+
+
+
 
 
     

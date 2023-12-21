@@ -33,9 +33,10 @@ class ChessboardChangeDetector:
             # Compute the absolute difference between the old image and the new image
             diff = cv2.absdiff(old_gray, new_gray)
             cv2.imshow("Difference", diff)
+            thresh = diff
 
-            # Apply adaptive thresholding
-            thresh = cv2.adaptiveThreshold(diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+            #Apply adaptive thresholding
+#             thresh = cv2.adaptiveThreshold(diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
 #             kernel = np.ones((5,5),np.uint8)
 
 # # Apply morphological opening
@@ -44,15 +45,15 @@ class ChessboardChangeDetector:
 #             cv2.imshow("Thresholded", thresh)
 
 
-            # Compute the absolute difference between the old image and the new image
-            # diff = cv2.absdiff(old_gray, new_gray)
-            # cv2.imshow("Difference", diff)
-            # threshold_value = 50
-            # # Apply Otsu's thresholding
-            # _, thresh = cv2.threshold(diff, threshold_value, 255, cv2.THRESH_BINARY)
+#             #Compute the absolute difference between the old image and the new image
+#             diff = cv2.absdiff(old_gray, new_gray)
+#             cv2.imshow("Difference", diff)
+            threshold_value = 50
+            # Apply Otsu's thresholding
+            _, thresh = cv2.threshold(diff, threshold_value, 255, cv2.THRESH_BINARY)
 
-            # show the thresholded image 
-            # cv2.imshow("Thresholded", thresh)
+            #show the thresholded image 
+            cv2.imshow("Thresholded", thresh)
             changed_positions = []
             # Iterate over the UCI positions
             
@@ -75,8 +76,9 @@ class ChessboardChangeDetector:
                 if np.any(roi):
                      # draw the bounding rectangle
                     new_img_copy = self.new_img.copy()
-                    cv2.rectangle(new_img_copy, (min_x, min_y), (max_x, max_y), (0, 255, 0), 2)
+                    cv2.rectangle(new_img_copy, (min_x, min_y), (max_x, max_y), (0, 0, 255), 2)
                     cv2.imshow("Chess Piece Tracker", new_img_copy)
+                    cv2.waitKey(0)
                         
                     return uci
                     changed_positions.append(uci)
@@ -147,4 +149,4 @@ def test():
 
     cv2.destroyAllWindows()
 
-test()
+#test()

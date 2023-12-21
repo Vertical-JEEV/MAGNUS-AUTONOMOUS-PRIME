@@ -76,7 +76,14 @@ class ArduinoComunicator:
         
 
 
+def testing():
+    arduino = ArduinoComunicator()
+    print(arduino.COM_PORT)
+    chesspiece_3d_coordinate = (10, 10, 10)
+    arduino.move_arm(chesspiece_3d_coordinate)
 
+
+#testing()
 
 
         

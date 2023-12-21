@@ -172,7 +172,8 @@ class ChessboardCornerDetection:
             #get the pixel coordinates of each corner of each square on the chessboard, passing in false so that we draw the corners
             self.__get_pixel_coordinates_using_shi_tomasi_on_warped_img()
             #map the corners to uci positions
-            self.map_corners_to_uci_positions()
+            if self.pixel_coordinates is not None:
+                self.map_corners_to_uci_positions()
 
             #cv2.imshow('Warped image', self.warped_img)
         #show the images
@@ -183,23 +184,23 @@ class ChessboardCornerDetection:
 
 
 
-# def test():
-#     # create a chessboard corner detection object
-#     chessboard_corner_detection = ChessboardCornerDetection()
-#     cap = cv2.VideoCapture(0)
-#     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)
-#     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1000)
-#     while True:
-#         # Capture frame-by-frame
-#         ret, frame = cap.read()
-#         chessboard_corner_detection.recognise_corners(frame)
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
+def test():
+    # create a chessboard corner detection object
+    chessboard_corner_detection = ChessboardCornerDetection()
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1000)
+    while True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+        chessboard_corner_detection.recognise_corners(frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-#     print(chessboard_corner_detection.pixel_coordinates)
+    print(chessboard_corner_detection.pixel_coordinates)
 
 
-# test()
+#test()
 
 
 
