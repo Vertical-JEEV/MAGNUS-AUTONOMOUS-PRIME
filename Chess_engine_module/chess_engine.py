@@ -4,6 +4,7 @@ import chess.engine
 
 class ChessEngine:
 
+    # select stockfish engine based on cpu
     try:
         STOCKFISH_PATH = r"Chess_engine_module\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
         engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
@@ -18,16 +19,19 @@ class ChessEngine:
 
 
     def __init__(self, elo, fen_string):
+        # initialise chess engine
 
         self.skill_level = self.convert_elo_to_skill_level(elo)
         self.fen_string = fen_string if fen_string is not None else "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"  
       
+        # configure engine
         self.engine.configure({"Skill Level": self.skill_level})
         self.board = chess.Board(self.fen_string)
 
 
     @staticmethod
     def convert_elo_to_skill_level(elo):
+        # convert elo to skill level
         if elo < 800:
             return 0
         elif elo < 1200:
@@ -89,6 +93,7 @@ class ChessEngine:
         return self.board.is_repetition(3)
     
     def __del__(self):
+        # quit engine
         try:
             self.engine.quit()
         except chess.engine.EngineTerminatedError:

@@ -11,6 +11,7 @@ class Database:
 
 
     def check_for_existing_db(self):
+        # check if the database exists, if it doesn't create it
         try:
             db = sql.connect(self.database_name)
             print("Connected to database")
@@ -56,6 +57,7 @@ class GamesDatabase(Database):
 
 
     def __init__(self):
+        # initialise the attributes
         self.database_name = r"Database_module\saved_games.db"
         self.table_name = "games"
         # create a dictionary for the table with the fields and their data types:

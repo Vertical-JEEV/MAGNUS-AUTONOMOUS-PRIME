@@ -22,7 +22,7 @@ class ChessboardChangeDetector:
             old_gray = cv2.cvtColor(self.old_img, cv2.COLOR_BGR2GRAY)
             new_gray = cv2.cvtColor(self.new_img, cv2.COLOR_BGR2GRAY)
 
-            # apply histogram equalization to improve the contrast of the images
+            # apply histogram equalization to improve the contrast of the images and then apply Gaussian blurring
             old_gray = cv2.equalizeHist(old_gray)
             new_gray = cv2.equalizeHist(new_gray)
 
@@ -69,9 +69,7 @@ class ChessboardChangeDetector:
                     cv2.waitKey(0)
                         
                     return uci
-                    changed_positions.append(uci)
-
-            #return changed_positions
+                    
 
         return None
     

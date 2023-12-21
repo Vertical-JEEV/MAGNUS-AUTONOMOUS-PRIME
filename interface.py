@@ -1,3 +1,5 @@
+
+# module for the interface of the chess game
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -22,6 +24,7 @@ import re
 class MainMenu(Screen):
     def __init__(self, **kwargs):
         super(MainMenu, self).__init__(**kwargs)
+        # Create a vertical BoxLayout as the root widget
         self.layout = BoxLayout(orientation='vertical')
         self.add_widget(self.layout)
 
@@ -144,17 +147,21 @@ class StartNewGameMenu(Screen):
 class BorderedLabel(Label):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # sets the boardered label to have a white border
         self.border = Line(width=1)
         self.canvas.after.add(Color(1, 1, 1, 1))
         self.canvas.after.add(self.border)
         self.bind(pos=self.update_border, size=self.update_border)
 
     def update_border(self, *args):
+        # updates the border of the label
         self.border.rectangle = (*self.pos, *self.size)
 
 class TableRow(BoxLayout):
+
     def __init__(self, row_data, menu, selectable=True, **kwargs):
         super(TableRow, self).__init__(**kwargs)
+        # Create a background and a rectangle for the row
         self.menu = menu
         self.selectable = selectable
         self.row_data = row_data
@@ -163,7 +170,7 @@ class TableRow(BoxLayout):
         self.rect = Rectangle(pos=self.pos, size=self.size)
         self.canvas.before.add(self.background)
         self.canvas.before.add(self.rect)
-
+        # Add the data to the row and each row turns to a button
         for item in row_data:
             label = BorderedLabel(text=str(item), halign='left')
             scroll_view = ScrollView()
@@ -175,6 +182,7 @@ class TableRow(BoxLayout):
 
 
     def update_rect(self, *args):
+        # Update the rectangle when the position or size of the row changes
         self.rect.pos = self.pos
         self.rect.size = self.size
 
@@ -222,7 +230,7 @@ class LoadExistingGameMenu(Screen):
 
 
     def populate_table(self):
-        # Fetch the data from the database
+        # Fetch the data from the  phony database
       
         data = [['Game 1', 1500, 0, 1, 'White', '01/01/2021'],
                 ['Game 2', 1500, 0.5, 0.5, 'White', '01/01/2021'],
@@ -252,6 +260,7 @@ class LoadExistingGameMenu(Screen):
 
 
     def update_selected_row_label(self):
+        # Update the selected row label
         if self.selected_row:
             self.selected_row_label.text = f'You selected {self.selected_row.row_data[0]}'
 
@@ -262,9 +271,10 @@ class LoadExistingGameMenu(Screen):
 
     
     def load_game(self, instance):
-        
+        # Switch to the game window
         print("game has started")
         if self.selected_row is not None:
+            # print  data if the data is not none
             print(f"selected row is {self.selected_row.row_data}")
         
         self.manager.current = 'game_window'
@@ -330,6 +340,7 @@ class CalibrationMenu(Screen):
 
 
     def check_value(self, value):
+        # check if the value is a float and greater than 0
         try:
             if float(value) >0:
                 return float(value)
@@ -338,17 +349,20 @@ class CalibrationMenu(Screen):
         
 
     def save_game(self, instance):
+        # check if the values are valid
         PATTERN = r'^\d+x\d+$'
         chessboard_dimensions = self.chessboard_dimensions.text.strip().lower()
+        # makes sure chessboard dimension input has the pattern of a number followed by an x followed by a number
         if not re.match(PATTERN, chessboard_dimensions):
             print('Invalid input')
             width = None
             height = None
         else:
+
             width, height = chessboard_dimensions.split('x')
             width = self.check_value(width)
             height = self.check_value(height)
-
+        # check if the values are valid
         pawn_height = self.check_value(self.pawn_height.text)
         rook_height = self.check_value(self.rook_height.text)
         knight_height = self.check_value(self.knight_height.text)
@@ -380,6 +394,7 @@ class CalibrationMenu(Screen):
 
 
     def clear_text_boxes(self):
+        # clear the text boxes
         self.chessboard_dimensions.text = ''
         self.pawn_height.text = ''
         self.rook_height.text = ''
@@ -481,14 +496,16 @@ class GameWindow(Screen):
 
                     Rectangle(pos=square_pos, size=square_size)
                     
+                    # Draw the pieces
                     fen_row = fen_rows[7-i]
                     expanded_fen_row = ''
+                    # expandthe row if there are any numbers
                     for char in fen_row:
                         if char.isdigit():
                             expanded_fen_row += ' ' * int(char)
                         else:
                             expanded_fen_row += char
-
+                    # if the index is less than the length of the expanded fen row then get the piece
                     if j < len(expanded_fen_row):
                         piece = expanded_fen_row[j]
                         if piece in piece_img_dict:
@@ -516,6 +533,7 @@ class GameWindow(Screen):
 
 class MyApp(App):
     def build(self):
+        # add windows to the screen manager 
         sm = ScreenManager(transition = FadeTransition())
         sm.add_widget(MainMenu(name='main_menu'))
         sm.add_widget(CalibrationMenu(name='calibration_menu'))

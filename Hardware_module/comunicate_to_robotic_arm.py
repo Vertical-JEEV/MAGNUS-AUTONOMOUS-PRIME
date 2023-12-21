@@ -5,10 +5,10 @@ import time
 
 
 class ArduinoComunicator:
-    SHOULDER_LINK_LENGTH = 10 #  
-    ELBOW_LINK_LENGTH = 10
-    WRIST_LINK_LENGTH = 10
-    BAUDRATE = 9600
+    SHOULDER_LINK_LENGTH = 10 # length of the shoulder link
+    ELBOW_LINK_LENGTH = 10 # length of the elbow link
+    WRIST_LINK_LENGTH = 10 # length of the wrist link
+    BAUDRATE = 9600 # baudrate of the arduino
 
 
     def __init__(self):
@@ -77,6 +77,7 @@ class ArduinoComunicator:
 
 
 def testing():
+    
     arduino = ArduinoComunicator()
     print(arduino.COM_PORT)
     chesspiece_3d_coordinate = (10, 10, 10)

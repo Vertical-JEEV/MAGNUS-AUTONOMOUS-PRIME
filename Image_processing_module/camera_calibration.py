@@ -7,8 +7,11 @@ from .corner_detection import ChessboardCornerDetection # our own class for corn
 class CameraCalibration:
 
     def __init__(self, CHESSBOARD_DIMENSIONS):
+
+        # initialize the attributes
         self.IMAGE_HEIGHT = 1000
         self.IMAGE_WIDTH = 1000
+        # chessboard dimensions is a string in the format "widthxheight" eg "160x160"
         self.WIDTH = float(CHESSBOARD_DIMENSIONS.strip().split("x")[0])/8
         self.HEIGHT = float(CHESSBOARD_DIMENSIONS.strip().split("x")[1])/8
         self.NUM_X_DIRECTION_CORNERS = self.NUM_Y_DIRECTION_CORNERS = 9
@@ -16,6 +19,7 @@ class CameraCalibration:
 
 
     def __generate_3d_corners_for_calibration(self):
+        # generate the 3d corners for calibration
         corner_coordinates = np.mgrid[0:self.NUM_X_DIRECTION_CORNERS, 0: self.NUM_Y_DIRECTION_CORNERS].T.reshape(-1,2)
         corner_coordinates = corner_coordinates.astype(float)
         corner_coordinates[:, 0] *= self.WIDTH
@@ -44,30 +48,32 @@ class CameraCalibration:
 
         print("calculated the extrinsic matrix")
 
-        # calculate the mean error for the intrinsic and extrinsic matrix
-        # mean_error = 0
-        # for i in range(len(chessboard_3d_corners_for_calibration)):
-        #     imgpoints2, _ = cv2.projectPoints(chessboard_3d_corners_for_calibration[i], rotation_vector, translation_vector, intrinsic_matrix, distortion_coefficients)
-        #     error = cv2.norm(pixel_coordinates_for_calibration[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
-        #     mean_error += error
+        #calculate the mean error for the intrinsic and extrinsic matrix
+        mean_error = 0
+        for i in range(len(chessboard_3d_corners_for_calibration)):
+            imgpoints2, _ = cv2.projectPoints(chessboard_3d_corners_for_calibration[i], rotation_vector, translation_vector, intrinsic_matrix, distortion_coefficients)
+            error = cv2.norm(pixel_coordinates_for_calibration[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
+            mean_error += error
 
-        # mean_error /= len(chessboard_3d_corners_for_calibration)
-        # print("mean error: ", mean_error)
+        mean_error /= len(chessboard_3d_corners_for_calibration)
+        print("mean error: ", mean_error)
         return intrinsic_matrix, extrinsic_matrix, distortion_coefficients    
         
     
 
     def start_calibration(self):
+        # start the calibration process
         corner_detection = ChessboardCornerDetection()
         NUM_IMAGES_USED = 0
         pixel_coordinates_for_calibration = []
         chessboard_3d_corners_for_calibration = []
         cap = cv2.VideoCapture(0)
+        # set the width and height of the camera
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.IMAGE_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.IMAGE_HEIGHT)
 
         #get the frames from the camera until we have 20 images for calibration
-        while NUM_IMAGES_USED < 10:
+        while NUM_IMAGES_USED < 50:
             # Capture frame-by-frame
             ret, frame = cap.read()
             corner_detection.recognise_corners(frame)
