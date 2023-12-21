@@ -509,11 +509,7 @@ class GameWindow(Screen):
 
     
 
-    def update_game(self, fen_string, user_score, robo_score):
-        self.fen_string = fen_string
-        self.user_score = user_score
-        self.robo_score = robo_score
-        self.draw_chessboard(self, None)
+    
 
 
   
